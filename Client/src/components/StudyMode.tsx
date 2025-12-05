@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { api } from '../lib/api';
+import { api, API_BASE_URL } from '../lib/api';
 import {
   Play,
   Pause,
@@ -65,8 +65,7 @@ interface StudyStreak {
   active_dates: string[];
 }
 
-const WHITE_NOISE_URL =
-  'https://samplelib.com/lib/preview/mp3/sample-3s.mp3';
+const WHITE_NOISE_URL = `${API_BASE_URL}/study/white-noise`;
 
 const formatLocalDay = (date: Date) => {
   const year = date.getFullYear();

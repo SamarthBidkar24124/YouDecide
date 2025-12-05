@@ -1,8 +1,10 @@
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import List, Optional
 
 from bson import ObjectId
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import FileResponse
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from pymongo import ReturnDocument
 
@@ -21,6 +23,32 @@ from ..models.study import (
 )
 
 router = APIRouter(prefix="/study", tags=["study"])
+
+
+# Absolute path to the bundled white-noise track at the project root.
+# Currently uses the WhatsApp audio file as the default background sound.
+WHITE_NOISE_PATH = (
+  Path(__file__).resolve().parents[3]
+  / "WhatsApp Audio 2025-12-05 at 12.17.07 AM.mpeg"
+)
+
+
+@router.get("/white-noise")
+async def get_white_noise() -> FileResponse:
+  """
+  Stream the default rain white-noise track used by the Study/Pomodoro timer.
+  """
+  if not WHITE_NOISE_PATH.exists():
+    raise HTTPException(
+      status_code=status.HTTP_404_NOT_FOUND,
+      detail="White noise audio file not found.",
+    )
+
+  return FileResponse(
+    path=str(WHITE_NOISE_PATH),
+    media_type="audio/mpeg",
+    filename="WhatsApp Audio 2025-12-05 at 12.17.07 AM.mpeg",
+  )
 
 
 async def _update_streak_for_date(

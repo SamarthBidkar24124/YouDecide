@@ -38,6 +38,9 @@ export default function Diary() {
 
   const [selectedDate, setSelectedDate] = useState<CalendarValue>(new Date());
   const [dayEvents, setDayEvents] = useState<EventItem[]>([]);
+  const [eventsByDay, setEventsByDay] = useState<Map<string, EventItem[]>>(
+    () => new Map(),
+  );
 
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventTime, setNewEventTime] = useState('18:00');
@@ -106,6 +109,52 @@ export default function Diary() {
     void loadEventsForDay();
   }, [user, selectedDate]);
 
+  useEffect(() => {
+    if (!user || !selectedDate) return;
+
+    const loadEventsForMonth = async () => {
+      try {
+        const base = selectedDate;
+        const monthStart = new Date(
+          base.getFullYear(),
+          base.getMonth(),
+          1,
+          0,
+          0,
+          0,
+        );
+        const monthEnd = new Date(
+          base.getFullYear(),
+          base.getMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+        );
+
+        const events = await api.get<EventItem[]>(
+          `/events?userId=${encodeURIComponent(
+            user.id,
+          )}&from=${monthStart.toISOString()}&to=${monthEnd.toISOString()}`,
+        );
+
+        const map = new Map<string, EventItem[]>();
+        events.forEach((event) => {
+          const day = formatLocalDay(new Date(event.start));
+          const list = map.get(day) ?? [];
+          list.push(event);
+          map.set(day, list);
+        });
+
+        setEventsByDay(map);
+      } catch (error) {
+        console.error('Error loading monthly events:', error);
+      }
+    };
+
+    void loadEventsForMonth();
+  }, [user, selectedDate]);
+
   const entriesByDay = useMemo(() => {
     const map = new Map<string, DiaryEntry[]>();
     entries.forEach((entry) => {
@@ -124,6 +173,11 @@ export default function Diary() {
   const daysWithEntries = useMemo(
     () => new Set(Array.from(entriesByDay.keys())),
     [entriesByDay]
+  );
+
+  const daysWithEvents = useMemo(
+    () => new Set(Array.from(eventsByDay.keys())),
+    [eventsByDay]
   );
 
   const handleSave = async () => {
@@ -294,10 +348,26 @@ export default function Diary() {
               onChange={(value) => setSelectedDate(value as CalendarValue)}
               tileClassName={({ date }) => {
                 const dayStr = formatLocalDay(date);
-                if (daysWithEntries.has(dayStr)) {
-                  return 'relative after:content-[""] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-2 after:h-2 after:rounded-full after:bg-purple-400';
+                const hasEntry = daysWithEntries.has(dayStr);
+                const hasEvent = daysWithEvents.has(dayStr);
+
+                if (!hasEntry && !hasEvent) {
+                  return undefined;
                 }
-                return undefined;
+
+                let classes = 'relative';
+
+                if (hasEntry) {
+                  classes +=
+                    ' after:content-[""] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-2 after:h-2 after:rounded-full after:bg-purple-400';
+                }
+
+                if (hasEvent) {
+                  classes +=
+                    ' before:content-[""] before:absolute before:top-1 before:left-1/2 before:-translate-x-1/2 before:w-2 before:h-2 before:rounded-full before:bg-sky-400';
+                }
+
+                return classes;
               }}
               className="w-full border-0 bg-transparent [&_.react-calendar__tile--now]:bg-purple-100 [&_.react-calendar__tile--active]:bg-purple-500 [&_.react-calendar__tile--active]:text-white"
             />

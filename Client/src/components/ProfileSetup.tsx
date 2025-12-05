@@ -96,7 +96,12 @@ export default function ProfileSetup({ onComplete }: { onComplete: () => void })
                       : 'bg-blue-100 border-blue-300 text-blue-600'
                   }`}
                 >
-                  <User className="w-12 h-12 mx-auto mb-2" />
+                  <div className="relative w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                    <User className="w-10 h-10" />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-blue-400 text-[10px] font-bold text-blue-500">
+                      B
+                    </div>
+                  </div>
                   <div className="font-bold">Boy</div>
                 </button>
 
@@ -109,7 +114,12 @@ export default function ProfileSetup({ onComplete }: { onComplete: () => void })
                       : 'bg-pink-100 border-pink-300 text-pink-600'
                   }`}
                 >
-                  <User className="w-12 h-12 mx-auto mb-2" />
+                  <div className="relative w-12 h-12 mx-auto mb-2 flex items-center justify-center">
+                    <User className="w-10 h-10" />
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center border-2 border-pink-400 text-[10px] font-bold text-pink-500">
+                      G
+                    </div>
+                  </div>
                   <div className="font-bold">Girl</div>
                 </button>
 
